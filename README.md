@@ -1,19 +1,20 @@
-# Veil Browser APK Project
+# Veil Browser App
 
-Dieses Repository enthält eine vollständige Android-App-Basis mit einer funktionalen Browser-Oberfläche.
+Eine Android-Browser-App mit Einstellungen, dunklem Modus und Startseitenverwaltung.
 
 ## Funktionen
-- WebView-basierter Browser
-- Adressleiste zum Öffnen von URLs
-- Zurück, Vorwärts, Neu laden, Startseite
-- Material-3-Design
-- Android Studio kompatibel
+- Browser mit WebView
+- Adressleiste
+- Zurück/Vorwärts/Aktualisieren
+- Startseite einstellbar
+- Dunkelmodus
+- Einstellungen-Overlay
 
 ## Build
 1. Android Studio öffnen
 2. Projektordner auswählen
-3. Gradle sync warten
-4. Build > Build APK oder Run App ausführen
+3. Gradle sync ausführen
+4. Build > Build APK oder Run App
 
 ## Hinweis
-Das ist ein eigenes Android-App-Projekt als Browser-Basis. Es ist kein vollständiger Firefox-Android-Sourcecode.
+Dies ist ein eigenständiges Android-Projekt als Browser-Basis und kein Firefox-Android-Quellbaum.

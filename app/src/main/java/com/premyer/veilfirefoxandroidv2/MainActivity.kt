@@ -22,15 +22,18 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,10 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -53,7 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            VeilFirefoxAndroidV2Theme {
+            VeilFirefoxAndroidV2Theme(darkTheme = false) {
                 BrowserApp()
             }
         }
@@ -62,7 +63,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun BrowserApp() {
+    var darkMode by rememberSaveable { mutableStateOf(false) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
     var urlText by rememberSaveable { mutableStateOf("https://www.google.com") }
+    var homePage by rememberSaveable { mutableStateOf("https://www.google.com") }
     var currentPageTitle by rememberSaveable { mutableStateOf("Google") }
     var canGoBack by rememberSaveable { mutableStateOf(false) }
     var canGoForward by rememberSaveable { mutableStateOf(false) }
@@ -74,161 +78,237 @@ fun BrowserApp() {
         webViewRef?.loadUrl(normalized)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Surface(
-            tonalElevation = 3.dp,
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = "Veil Browser",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(
-                        onClick = {
-                            if (webViewRef?.canGoBack() == true) webViewRef?.goBack()
-                        },
-                        enabled = canGoBack
-                    ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
-                    }
-
-                    IconButton(
-                        onClick = {
-                            if (webViewRef?.canGoForward() == true) webViewRef?.goForward()
-                        },
-                        enabled = canGoForward
-                    ) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "Vorwärts")
-                    }
-
-                    IconButton(
-                        onClick = { webViewRef?.reload() }
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Neu laden")
-                    }
-
-                    IconButton(
-                        onClick = { loadUrl("https://www.google.com") }
-                    ) {
-                        Icon(Icons.Default.Home, contentDescription = "Startseite")
-                    }
-
-                    IconButton(
-                        onClick = {
-                            webViewRef?.stopLoading()
-                        }
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = "Stopp")
-                    }
-                }
-
-                OutlinedTextField(
-                    value = urlText,
-                    onValueChange = { urlText = it },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        imeAction = ImeAction.Go
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    trailingIcon = {
-                        Button(
-                            onClick = { loadUrl(urlText) },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Text("Go")
-                        }
-                    }
-                )
-            }
-        }
-
-        if (currentPageTitle.isNotBlank()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                )
-            ) {
-                Text(
-                    text = currentPageTitle,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-
-        Box(
+    VeilFirefoxAndroidV2Theme(darkTheme = darkMode) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.builtInZoomControls = true
-                        settings.displayZoomControls = false
-                        settings.useWideViewPort = true
-                        settings.loadWithOverviewMode = true
-                        settings.databaseEnabled = true
-                        settings.allowFileAccess = true
+            Surface(
+                tonalElevation = 3.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Veil Browser",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
 
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                                if (url != null) urlText = url
-                                canGoBack = view?.canGoBack() == true
-                                canGoForward = view?.canGoForward() == true
-                            }
+                        IconButton(
+                            onClick = { showSettings = true }
+                        ) {
+                            Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+                        }
+                    }
 
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                if (url != null) urlText = url
-                                currentPageTitle = view?.title ?: "Seite"
-                                canGoBack = view?.canGoBack() == true
-                                canGoForward = view?.canGoForward() == true
-                            }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                if (webViewRef?.canGoBack() == true) webViewRef?.goBack()
+                            },
+                            enabled = canGoBack
+                        ) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
                         }
 
-                        webViewRef = this
-                        loadUrl(normalizeUrl(urlText))
+                        IconButton(
+                            onClick = {
+                                if (webViewRef?.canGoForward() == true) webViewRef?.goForward()
+                            },
+                            enabled = canGoForward
+                        ) {
+                            Icon(Icons.Default.ArrowForward, contentDescription = "Vorwärts")
+                        }
+
+                        IconButton(
+                            onClick = { webViewRef?.reload() }
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Neu laden")
+                        }
+
+                        IconButton(
+                            onClick = { loadUrl(homePage) }
+                        ) {
+                            Icon(Icons.Default.Home, contentDescription = "Startseite")
+                        }
+
+                        IconButton(
+                            onClick = { webViewRef?.stopLoading() }
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "Stopp")
+                        }
                     }
-                },
-                update = { webView ->
-                    webViewRef = webView
-                    if (webView.url == null || webView.url != normalizeUrl(urlText)) {
-                        webView.loadUrl(normalizeUrl(urlText))
+
+                    OutlinedTextField(
+                        value = urlText,
+                        onValueChange = { urlText = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Go
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        trailingIcon = {
+                            Button(
+                                onClick = { loadUrl(urlText) },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Go")
+                            }
+                        }
+                    )
+                }
+            }
+
+            if (currentPageTitle.isNotBlank()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                    )
+                ) {
+                    Text(
+                        text = currentPageTitle,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(18.dp))
+            ) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { context ->
+                        WebView(context).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.builtInZoomControls = true
+                            settings.displayZoomControls = false
+                            settings.useWideViewPort = true
+                            settings.loadWithOverviewMode = true
+                            settings.databaseEnabled = true
+                            settings.allowFileAccess = true
+
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                    if (url != null) urlText = url
+                                    canGoBack = view?.canGoBack() == true
+                                    canGoForward = view?.canGoForward() == true
+                                }
+
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    if (url != null) urlText = url
+                                    currentPageTitle = view?.title ?: "Seite"
+                                    canGoBack = view?.canGoBack() == true
+                                    canGoForward = view?.canGoForward() == true
+                                }
+                            }
+
+                            webViewRef = this
+                            loadUrl(normalizeUrl(homePage))
+                        }
+                    },
+                    update = { webView ->
+                        webViewRef = webView
+                        if (webView.url == null || webView.url != normalizeUrl(urlText)) {
+                            webView.loadUrl(normalizeUrl(urlText))
+                        }
+                    }
+                )
+            }
+        }
+
+        if (showSettings) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Text(
+                            text = "Einstellungen",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Dunkelmodus")
+                            Switch(
+                                checked = darkMode,
+                                onCheckedChange = { darkMode = it }
+                            )
+                        }
+
+                        OutlinedTextField(
+                            value = homePage,
+                            onValueChange = { homePage = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            label = { Text("Startseite") }
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = { showSettings = false },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Schließen")
+                            }
+                        }
                     }
                 }
-            )
+            }
         }
     }
 }
