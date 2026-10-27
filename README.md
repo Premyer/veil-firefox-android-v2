@@ -1,14 +1,14 @@
 # Veil Browser App
 
-Eine Android-Browser-App mit Einstellungen, dunklem Modus und Startseitenverwaltung.
+Eine vollständige Browser-App-Basis mit Menü, Einstellungen, Startseitenverwaltung und dunklem Modus.
 
 ## Funktionen
-- Browser mit WebView
+- WebView-basierter Browser
 - Adressleiste
-- Zurück/Vorwärts/Aktualisieren
-- Startseite einstellbar
-- Dunkelmodus
-- Einstellungen-Overlay
+- Zurück, Vorwärts, Aktualisieren, Startseite
+- Menü mit mehreren Aktionen
+- Einstellung für Startseite und Dunkelmodus
+- Material 3 UI
 
 ## Build
 1. Android Studio öffnen

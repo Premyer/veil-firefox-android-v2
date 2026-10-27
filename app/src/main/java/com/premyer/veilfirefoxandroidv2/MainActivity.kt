@@ -21,13 +21,15 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,12 +67,21 @@ class MainActivity : ComponentActivity() {
 fun BrowserApp() {
     var darkMode by rememberSaveable { mutableStateOf(false) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showMenu by rememberSaveable { mutableStateOf(false) }
     var urlText by rememberSaveable { mutableStateOf("https://www.google.com") }
     var homePage by rememberSaveable { mutableStateOf("https://www.google.com") }
     var currentPageTitle by rememberSaveable { mutableStateOf("Google") }
     var canGoBack by rememberSaveable { mutableStateOf(false) }
     var canGoForward by rememberSaveable { mutableStateOf(false) }
+    var tabCount by rememberSaveable { mutableStateOf(1) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
+    val favorites = remember {
+        mutableStateOf(listOf(
+            "https://www.google.com",
+            "https://www.github.com",
+            "https://www.wikipedia.org"
+        ))
+    }
 
     val loadUrl: (String) -> Unit = { input ->
         val normalized = normalizeUrl(input)
@@ -104,10 +115,13 @@ fun BrowserApp() {
                             color = MaterialTheme.colorScheme.primary
                         )
 
-                        IconButton(
-                            onClick = { showSettings = true }
-                        ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menü")
+                            }
+                            IconButton(onClick = { showSettings = true }) {
+                                Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+                            }
                         }
                     }
 
@@ -182,20 +196,29 @@ fun BrowserApp() {
                 }
             }
 
-            if (currentPageTitle.isNotBlank()) {
-                Card(
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                )
+            ) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                    )
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = currentPageTitle,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Tab ${tabCount}",
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -308,6 +331,100 @@ fun BrowserApp() {
                         }
                     }
                 }
+            }
+        }
+
+        if (showMenu) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f)),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Card(
+                    modifier = Modifier
+                        .padding(top = 72.dp, end = 14.dp)
+                        .fillMaxWidth(0.72f),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        MenuActionRow(
+                            icon = Icons.Default.Home,
+                            title = "Neue Startseite",
+                            subtitle = "Setze Google als Standard"
+                        ) {
+                            homePage = "https://www.google.com"
+                            showMenu = false
+                        }
+
+                        MenuActionRow(
+                            icon = Icons.Default.Star,
+                            title = "Favoriten",
+                            subtitle = "GitHub, Google, Wikipedia"
+                        ) {
+                            favorites.value.forEach { url ->
+                                if (url.isNotBlank()) {
+                                    loadUrl(url)
+                                }
+                            }
+                            showMenu = false
+                        }
+
+                        MenuActionRow(
+                            icon = Icons.Default.Info,
+                            title = "Info",
+                            subtitle = "Veil Browser v1.0"
+                        ) {
+                            currentPageTitle = "Veil Browser v1.0"
+                            showMenu = false
+                        }
+
+                        MenuActionRow(
+                            icon = Icons.Default.Settings,
+                            title = "Einstellungen",
+                            subtitle = "Theme & Startseite"
+                        ) {
+                            showSettings = true
+                            showMenu = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MenuActionRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(icon, contentDescription = title)
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(title, fontSize = 16.sp)
+                Text(subtitle, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
