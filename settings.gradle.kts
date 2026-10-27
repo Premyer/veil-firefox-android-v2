@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VeilFirefoxAndroidApp"
+rootProject.name = "VeilBrowser"
 include(":app")
